@@ -29,6 +29,8 @@ const API_CONFIG = {
     // Default headers
     headers: {
         'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Origin': process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : window.location.origin,
     },
 };
 

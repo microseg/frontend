@@ -7,227 +7,267 @@ import { imageAPI } from '../services/api';
 const labelInfoStyles = `
 .label-info {
   margin-top: 15px;
-  background-color: #f8f9fa;
-  border-radius: 6px;
-  padding: 15px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  background-color: #ffffff;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  max-height: calc(100vh - 250px);
+  overflow-y: auto;
+  scrollbar-width: thin;
 }
 
-.label-count {
-  font-weight: bold;
-  margin-bottom: 15px;
-  color: #333;
-  font-size: 14px;
-  border-bottom: 1px solid #eee;
-  padding-bottom: 8px;
+.label-info::-webkit-scrollbar {
+  width: 6px;
 }
 
-.label-colors {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-bottom: 10px;
+.label-info::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
 }
 
-.label-color-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 5px 0;
-  cursor: pointer;
-  border-radius: 4px;
-  padding: 5px;
-  transition: background-color 0.2s;
-}
-
-.label-color-item:hover {
-  background-color: rgba(0, 0, 0, 0.05);
-}
-
-.label-color-item.selected {
-  background-color: rgba(74, 144, 226, 0.15);
-  border-left: 3px solid #4a90e2;
-  padding-left: 7px;
-  font-weight: 500;
-}
-
-.color-box {
-  width: 24px;
-  height: 24px;
-  border-radius: 4px;
-  border: 1px solid rgba(0,0,0,0.1);
-  flex-shrink: 0;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-}
-
-.label-description {
-  font-size: 14px;
-  color: #333;
+.label-info::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 3px;
 }
 
 .legend-title {
-  font-weight: bold;
-  margin-bottom: 10px;
+  font-size: 18px;
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #e7eaf3;
+}
+
+.layer-count {
   font-size: 15px;
-  color: #333;
+  color: #5a6776;
+  margin-bottom: 25px;
+  padding: 12px;
+  background-color: #f8f9fa;
+  border-radius: 6px;
+  text-align: center;
 }
 
-.download-buttons {
+.layer-list {
   display: flex;
-  gap: 10px;
-  margin-top: 20px;
-  margin-bottom: 20px;
-  justify-content: center;
+  flex-direction: column;
+  gap: 16px;
 }
 
-.download-button {
-  background-color: #4a90e2;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  padding: 8px 16px;
-  font-size: 14px;
+.layer-group {
+  border: 1px solid #e7eaf3;
+  border-radius: 8px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  background-color: #fff;
+}
+
+.layer-group:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  transform: translateY(-2px);
+}
+
+.layer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  background-color: #fff;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.2s ease;
+  border-bottom: 1px solid #e7eaf3;
+}
+
+.layer-header:hover {
+  background-color: #f8f9fa;
+}
+
+.layer-header.selected {
+  background-color: #e3f2fd;
+  border-left: 4px solid #2196f3;
+}
+
+.layer-title {
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: 12px;
   font-weight: 500;
+  font-size: 15px;
 }
 
-.download-button:hover {
-  background-color: #357ab8;
+.layer-color {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  border: 2px solid rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
 
-.data-button {
-  background-color: #5cb85c;
+.flake-count {
+  color: #6c757d;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 4px 12px;
+  background-color: #f8f9fa;
+  border-radius: 20px;
 }
 
-.data-button:hover {
-  background-color: #4a984a;
+.flake-list {
+  background-color: #fff;
+  padding: 8px;
 }
 
-.results-section {
-  margin-top: 20px;
+.flake-item {
+  padding: 15px;
+  margin: 8px;
+  border-radius: 8px;
+  background-color: #f8f9fa;
+  transition: all 0.2s ease;
+}
+
+.flake-item:hover {
+  background-color: #e9ecef;
+}
+
+.flake-name {
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: #2c3e50;
+  font-size: 14px;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  padding: 15px;
-  background-color: #f9f9f9;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  gap: 8px;
 }
 
-@media (min-width: 1024px) {
-  .results-section {
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: flex-start;
-  }
-  
-  .label-info {
-    flex: 1;
-    margin-right: 20px;
-    margin-top: 0;
-  }
-  
-  .download-buttons {
-    flex-direction: column;
-    margin-top: 0;
-  }
+.flake-name::before {
+  content: '';
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  background-color: #4a90e2;
+  border-radius: 50%;
 }
 
-.analysis-layout {
+.flake-details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+  padding: 12px;
+  background-color: #ffffff;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #5a6776;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.flake-details > div {
   display: flex;
   flex-direction: column;
-  width: 100%;
+  gap: 4px;
 }
 
-.images-column {
-  flex: 1;
-  margin-bottom: 20px;
+.flake-details > div span:first-child {
+  font-weight: 500;
+  color: #2c3e50;
 }
 
-.info-column {
-  width: 100%;
-  padding: 15px;
-  background-color: #f9f9f9;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-}
-
-.image-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 20px;
-  margin-bottom: 15px;
-}
-
-@media (min-width: 768px) {
-  .image-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (min-width: 1024px) {
+@media (min-width: 1200px) {
   .analysis-layout {
-    flex-direction: row;
-    align-items: flex-start;
-    gap: 20px;
+    grid-template-columns: 2fr 1fr;
+    gap: 30px;
   }
-  
-  .images-column {
-    flex: 3;
-    margin-bottom: 0;
-  }
-  
+
   .info-column {
-    flex: 1;
-    max-width: 300px;
-    align-self: stretch;
-    display: flex;
-    flex-direction: column;
     position: sticky;
     top: 20px;
-  }
-  
-  .label-info {
-    flex: 1;
-    margin-top: 0;
+    max-height: calc(100vh - 40px);
+    overflow-y: auto;
   }
 }
 
-.layer-instructions {
-  font-size: 12px;
-  color: #666;
-  margin-bottom: 15px;
-  font-style: italic;
-  border-bottom: 1px dashed #eee;
-  padding-bottom: 10px;
+@media (max-width: 1199px) {
+  .analysis-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .info-column {
+    margin-top: 20px;
+  }
 }
 
-.expand-collapse-button {
-  margin-top: 10px;
-  padding: 8px 10px;
-  background-color: #f0f0f0;
-  border-radius: 4px;
-  cursor: pointer;
+.user-guide {
   display: flex;
   align-items: center;
-  justify-content: center;
-  font-size: 13px;
-  color: #444;
-  transition: background-color 0.2s;
-  user-select: none;
+  gap: 10px;
+  padding: 12px 16px;
+  background-color: #fff3e0;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  border: 1px solid #ffe0b2;
 }
 
-.expand-collapse-button:hover {
-  background-color: #e0e0e0;
+.guide-icon {
+  font-size: 20px;
 }
 
-.expand-collapse-button .arrow {
-  margin-right: 6px;
-  font-size: 10px;
+.guide-text {
+  color: #795548;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.layer-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 500;
+  font-size: 15px;
+  position: relative;
+}
+
+.expansion-indicator {
+  font-size: 12px;
+  color: #666;
+  margin-left: 8px;
+  transition: transform 0.2s ease;
+}
+
+.layer-header {
+  position: relative;
+  padding-right: 40px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.layer-header:hover {
+  background-color: #f5f5f5;
+}
+
+.layer-header:hover .expansion-indicator {
+  color: #2196f3;
+}
+
+.layer-header.selected {
+  background-color: #e3f2fd;
+  border-left: 4px solid #2196f3;
+}
+
+.flake-list {
+  background-color: #fff;
+  padding: 8px;
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 `;
 
@@ -254,7 +294,7 @@ function MainPage({ onLogout }) {
   const [isUploadDropdownOpen, setIsUploadDropdownOpen] = useState(false); // Upload dropdown state
   const [currentPath, setCurrentPath] = useState(''); // Current folder path
   const [selectedLayer, setSelectedLayer] = useState(null); // Currently selected layer for highlighting
-  const [expandedLayers, setExpandedLayers] = useState(false); // Whether to show layers above 5
+  const [expandedLayers, setExpandedLayers] = useState(new Set());
   
   const dropdownRef = useRef(null); // Reference for dropdown menu (used for click outside detection)
   const uploadDropdownRef = useRef(null); // Reference for upload dropdown
@@ -300,7 +340,12 @@ function MainPage({ onLogout }) {
 
       const response = await fetch(API_CONFIG.endpoints.listImages, {
         method: 'POST',
-        headers: API_CONFIG.headers,
+        headers: {
+          ...API_CONFIG.headers,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        mode: 'cors',
         body: JSON.stringify({
           prefix: prefix
         })
@@ -380,7 +425,7 @@ function MainPage({ onLogout }) {
     setSelectedImageKey(imageKey);
     setProcessedImage(null);
     setSelectedLayer(null); // Reset selected layer when changing images
-    setExpandedLayers(false); // Reset expanded layers state when changing images
+    setExpandedLayers(new Set()); // Reset expanded layers state when changing images
     setLoading(true);
     setError('');
 
@@ -416,13 +461,6 @@ function MainPage({ onLogout }) {
   };
 
   /**
-   * Toggles expanded view of layers above 5
-   */
-  const toggleExpandLayers = () => {
-    setExpandedLayers(!expandedLayers);
-  };
-
-  /**
    * Processes the selected image using the analysis API
    * Sends the image for material analysis (Graphene)
    */
@@ -432,7 +470,7 @@ function MainPage({ onLogout }) {
     setLoading(true);
     setProcessedImage(null);
     setSelectedLayer(null); // Reset selected layer when processing a new image
-    setExpandedLayers(false); // Reset expanded layers state
+    setExpandedLayers(new Set()); // Reset expanded layers state
     setError('');
 
     try {
@@ -454,48 +492,53 @@ function MainPage({ onLogout }) {
       }
 
       const result = await response.json();
-      console.log('API response:', result); // Add logging to inspect the response
+      console.log('API response:', result);
       
       if (result.statusCode === 200) {
-        const bodyObj = JSON.parse(result.body);
-        console.log('Parsed body:', bodyObj); // Add logging to inspect the parsed body
+        const bodyObj = result.body;
+        console.log('Response body:', bodyObj);
         
-        if (bodyObj.result_img && bodyObj.result_label) {
-          // Save segmentation image and label mapping
-          setProcessedImage({
-            image: bodyObj.result_img,
-            label: bodyObj.result_label
+        // Get the processed image from S3
+        if (bodyObj.file_locations && bodyObj.file_locations.output_image) {
+          const imageKey = bodyObj.file_locations.output_image.replace('s3://test-matsight/', '');
+          
+          // Get the processed image URL
+          const imageResponse = await fetch(API_CONFIG.endpoints.getImageUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+              image_key: imageKey
+            })
           });
-        } else if (bodyObj.result) {
-          // Handle old API format for backward compatibility
-          setProcessedImage({
-            image: bodyObj.result,
-            label: null // No label data in old format
-          });
+
+          const imageData = await imageResponse.json();
+          if (imageData.statusCode === 200) {
+            const imageUrl = JSON.parse(imageData.body).url;
+            setProcessedImage({
+              image: imageUrl,
+              isS3Url: true,
+              flakes: bodyObj.flakes,
+              flakes_detected: bodyObj.flakes_detected,
+              material: bodyObj.material,
+              detection_parameters: bodyObj.detection_parameters
+            });
+          } else {
+            throw new Error('Failed to get processed image URL');
+          }
         } else {
-          throw new Error('Invalid response data format');
+          throw new Error('No processed image location in response');
         }
       } else {
-        throw new Error('Processing failed: ' + (result.body || 'Unknown error'));
+        throw new Error('Processing failed: ' + (result.body?.error || 'Unknown error'));
       }
     } catch (error) {
       console.error('Image processing failed:', error);
       setError('Image processing failed: ' + error.message);
     } finally {
       setLoading(false);
-    }
-  };
-
-  /**
-   * Handles click on a layer in the wedge
-   * @param {number} layer - The layer number that was clicked
-   */
-  const handleLayerClick = (layer) => {
-    // If the same layer is clicked again, toggle it off
-    if (selectedLayer === layer) {
-      setSelectedLayer(null);
-    } else {
-      setSelectedLayer(layer);
     }
   };
 
@@ -1061,101 +1104,59 @@ function MainPage({ onLogout }) {
   };
 
   /**
-   * Get color mapping for labels
-   * @returns {Object} Label color mapping object
+   * Get flake analysis data from the processed result
+   * @returns {Object} Flake analysis data
    */
-  const getLabelColors = () => {
-    if (!processedImage) return null;
+  const getFlakeAnalysis = () => {
+    if (!processedImage || !processedImage.flakes) return null;
     
-    // If no label data is available (old API format), return null
-    if (!processedImage.label) {
-      console.log('No label data available, using legacy mode');
-      return null;
-    }
+    const flakes = processedImage.flakes;
+    const uniqueThicknesses = new Set();
+    const flakesByThickness = {};
     
-    const labelData = processedImage.label;
-    const imageData = processedImage.image;
-    const uniqueLabels = new Set();
-    
-    // Collect all unique labels
-    for (let y = 0; y < labelData.length; y++) {
-      for (let x = 0; x < labelData[y].length; x++) {
-        const label = labelData[y][x];
-        uniqueLabels.add(label); // Include background labels -1
+    // Collect all unique thicknesses and group flakes
+    flakes.forEach(flake => {
+      uniqueThicknesses.add(flake.thickness);
+      if (!flakesByThickness[flake.thickness]) {
+        flakesByThickness[flake.thickness] = [];
       }
-    }
-    
-    console.log('Unique labels found:', Array.from(uniqueLabels));
-    
-    // Create mapping from labels to colors extracted from the image
+      flakesByThickness[flake.thickness].push(flake);
+    });
+
+    // Create color mapping for different thicknesses
     const colorMap = {};
-    const labelDescriptions = {};
-    
-    // Find a representative color for each label by sampling the image
-    uniqueLabels.forEach(label => {
-      if (label === -1) {
-        // Background label uses black
-        colorMap[label] = `rgb(0, 0, 0)`;
-        labelDescriptions[label] = 'Background';
-      } else {
-        // For each non-background label, find pixels with this label
-        // and use the corresponding color from the image
-        let redSum = 0, greenSum = 0, blueSum = 0, count = 0;
-        let samplePixels = [];
-        
-        // Sample up to 100 pixels to find average color
-        for (let y = 0; y < labelData.length && count < 100; y++) {
-          for (let x = 0; x < labelData[y].length && count < 100; x++) {
-            if (labelData[y][x] === label) {
-              const pixel = imageData[y][x];
-              if (count < 5) { // Store a few sample pixels for debugging
-                samplePixels.push({y, x, pixel});
-              }
-              redSum += pixel[0];
-              greenSum += pixel[1];
-              blueSum += pixel[2];
-              count++;
-            }
-          }
-        }
-        
-        if (count > 0) {
-          const avgRed = Math.round(redSum / count);
-          const avgGreen = Math.round(greenSum / count);
-          const avgBlue = Math.round(blueSum / count);
-          colorMap[label] = `rgb(${avgRed}, ${avgGreen}, ${avgBlue})`;
-          console.log(`Label ${label} color: rgb(${avgRed}, ${avgGreen}, ${avgBlue}) from ${count} pixels`);
-          if (samplePixels.length > 0) {
-            console.log(`Sample pixels for label ${label}:`, samplePixels);
-          }
-        } else {
-          // Fallback if no pixels found (should not happen)
-          const hue = (label * 137.5) % 360;
-          colorMap[label] = `hsl(${hue}, 70%, 60%)`;
-          console.warn(`No pixels found for label ${label}, using fallback color`);
-        }
-        
-        // Updated: Label 0 represents 1 Layer, Label 1 represents 2 Layers, etc.
-        const layerNumber = label + 1;
-        labelDescriptions[label] = `${layerNumber} Layer${layerNumber > 1 ? 's' : ''}`;
-      }
+    const thicknessDescriptions = {};
+    const sortedThicknesses = Array.from(uniqueThicknesses).sort((a, b) => parseInt(a) - parseInt(b));
+
+    sortedThicknesses.forEach(thickness => {
+      // Generate color based on thickness
+      const hue = (parseInt(thickness) * 30) % 360; // Different hue for each thickness
+      colorMap[thickness] = `hsl(${hue}, 70%, 50%)`;
+      thicknessDescriptions[thickness] = `${thickness} Layer${parseInt(thickness) > 1 ? 's' : ''}`;
     });
-    
-    // Sort labels by value, with background (-1) at the beginning
-    const sortedLabels = Array.from(uniqueLabels).sort((a, b) => {
-      if (a === -1) return -1;
-      if (b === -1) return 1;
-      return a - b;
+
+    // Calculate each thickness's statistics
+    const statistics = {};
+    sortedThicknesses.forEach(thickness => {
+      const thicknessFlakes = flakesByThickness[thickness];
+      statistics[thickness] = {
+        count: thicknessFlakes.length,
+        totalSize: thicknessFlakes.reduce((sum, f) => sum + f.size, 0),
+        avgSize: thicknessFlakes.reduce((sum, f) => sum + f.size, 0) / thicknessFlakes.length,
+        avgAspectRatio: thicknessFlakes.reduce((sum, f) => sum + f.aspect_ratio, 0) / thicknessFlakes.length,
+        avgFalsePositive: thicknessFlakes.reduce((sum, f) => sum + f.false_positive_probability, 0) / thicknessFlakes.length
+      };
     });
-    
-    console.log('Final color map:', colorMap);
-    console.log('Label descriptions:', labelDescriptions);
-    
-    return { 
-      colorMap, 
-      labelDescriptions,
-      sortedLabels,
-      count: uniqueLabels.size - (uniqueLabels.has(-1) ? 1 : 0) // Don't count background
+
+    return {
+      colorMap,
+      labelDescriptions: thicknessDescriptions,
+      sortedLabels: sortedThicknesses,
+      count: uniqueThicknesses.size,
+      flakesByThickness,
+      statistics,
+      totalFlakes: processedImage.flakes_detected,
+      detectionParams: processedImage.detection_parameters
     };
   };
 
@@ -1235,7 +1236,7 @@ function MainPage({ onLogout }) {
     const totalPixels = labelData.length * labelData[0].length;
     
     // Initialize counters for all labels
-    getLabelColors().sortedLabels.forEach(label => {
+    getFlakeAnalysis().sortedLabels.forEach(label => {
       pixelCounts[label] = 0;
     });
     
@@ -1259,9 +1260,9 @@ function MainPage({ onLogout }) {
     };
     
     // Add data for each region
-    getLabelColors().sortedLabels.forEach(label => {
+    getFlakeAnalysis().sortedLabels.forEach(label => {
       const percentage = ((pixelCounts[label] / totalPixels) * 100).toFixed(2);
-      const description = getLabelColors().labelDescriptions[label];
+      const description = getFlakeAnalysis().labelDescriptions[label];
       
       analysisData.layers.push({
         label: label,
@@ -1285,6 +1286,19 @@ function MainPage({ onLogout }) {
     
     // Release URL object
     URL.revokeObjectURL(url);
+  };
+
+  // 添加处理展开/折叠的函数
+  const toggleLayerExpansion = (thickness) => {
+    setExpandedLayers(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(thickness)) {
+        newSet.delete(thickness);
+      } else {
+        newSet.add(thickness);
+      }
+      return newSet;
+    });
   };
 
   // Render the main interface
@@ -1522,7 +1536,10 @@ function MainPage({ onLogout }) {
                     <h3>Analysis Result</h3>
                     <div className="image-preview">
                       {processedImage ? (
-                        <img src={drawProcessedImage()} alt="Processed result" />
+                        <img 
+                          src={processedImage.isS3Url ? processedImage.image : drawProcessedImage()} 
+                          alt="Processed result" 
+                        />
                       ) : (
                         <span className="placeholder-text">Process the sample to view results</span>
                       )}
@@ -1546,7 +1563,7 @@ function MainPage({ onLogout }) {
                     >
                       Download Image
                     </button>
-                    {getLabelColors() && (
+                    {getFlakeAnalysis() && (
                       <button 
                         className="download-button data-button" 
                         onClick={downloadAnalysisData}
@@ -1573,61 +1590,81 @@ function MainPage({ onLogout }) {
               {/* Right side - Layer information */}
               {processedImage && (
                 <div className="info-column">
-                  {/* Label information display (Wedge) */}
-                  {getLabelColors() && (
+                  {getFlakeAnalysis() && (
                     <div className="label-info">
                       <div className="legend-title">Graphene Layer Analysis</div>
-                      <div className="layer-instructions">
-                        Click on a layer to highlight it
+                      <div className="layer-count">
+                        Detected {getFlakeAnalysis().totalFlakes} graphene flakes
                       </div>
-                      <div className="label-count">
-                        Detected {getLabelColors().count} different layer regions
+                      
+                      <div className="user-guide">
+                        <div className="guide-icon">💡</div>
+                        <div className="guide-text">
+                          Click on layer headers to expand/collapse details
+                        </div>
                       </div>
-                      <div className="label-colors">
-                        {getLabelColors().sortedLabels
-                          .filter(label => {
-                            // Show background layer (-1) and layers 1-5 (label 0-4) always
-                            // For layers >5 (label >4), only show if expanded
-                            return label === -1 || label <= 4 || expandedLayers;
-                          })
-                          .map((label) => (
-                            <div 
-                              key={label} 
-                              className={`label-color-item ${selectedLayer === label ? 'selected' : ''}`}
-                              onClick={() => handleLayerClick(label)}
-                            >
-                              <div className="color-box" style={{ backgroundColor: getLabelColors().colorMap[label] }}></div>
-                              <span className="label-description">{getLabelColors().labelDescriptions[label]}</span>
+                      
+                      {/* Layer list */}
+                      <div className="layer-list">
+                        {getFlakeAnalysis().sortedLabels.map((thickness) => {
+                          const flakes = getFlakeAnalysis().flakesByThickness[thickness];
+                          const isExpanded = expandedLayers.has(thickness);
+                          
+                          return (
+                            <div key={thickness} className="layer-group">
+                              <div 
+                                className={`layer-header ${selectedLayer === thickness ? 'selected' : ''}`}
+                                onClick={() => toggleLayerExpansion(thickness)}
+                              >
+                                <div className="layer-title">
+                                  <div 
+                                    className="layer-color" 
+                                    style={{ backgroundColor: getFlakeAnalysis().colorMap[thickness] }}
+                                  ></div>
+                                  <span>{thickness} Layer</span>
+                                  <div className="expansion-indicator">
+                                    {isExpanded ? '▼' : '▶'}
+                                  </div>
+                                </div>
+                                <div className="flake-count">
+                                  {flakes.length} flakes
+                                </div>
+                              </div>
+                              {isExpanded && (
+                                <div className="flake-list">
+                                  {flakes.map((flake, index) => (
+                                    <div key={index} className="flake-item">
+                                      <div className="flake-name">Flake {index + 1}</div>
+                                      <div className="flake-details">
+                                        <div>
+                                          <span>Area</span>
+                                          <span>{flake.size.toFixed(2)} μm²</span>
+                                        </div>
+                                        <div>
+                                          <span>Aspect Ratio</span>
+                                          <span>{flake.aspect_ratio.toFixed(2)}</span>
+                                        </div>
+                                        <div>
+                                          <span>False Positive</span>
+                                          <span>{(flake.false_positive_probability * 100).toFixed(2)}%</span>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
                             </div>
-                          ))
-                        }
-                        
-                        {/* Show expand/collapse button only if there are layers > 5 (label > 4) */}
-                        {getLabelColors().sortedLabels.some(label => label > 4) && (
-                          <div className="expand-collapse-button" onClick={toggleExpandLayers}>
-                            {expandedLayers ? (
-                              <>
-                                <span className="arrow">▲</span>
-                                <span>Show fewer layers</span>
-                              </>
-                            ) : (
-                              <>
-                                <span className="arrow">▼</span>
-                                <span>Show more layers ({getLabelColors().sortedLabels.filter(label => label > 4).length} more)</span>
-                              </>
-                            )}
-                          </div>
-                        )}
+                          );
+                        })}
                       </div>
                     </div>
                   )}
                   
-                  {/* Show message for legacy API format */}
-                  {processedImage && !getLabelColors() && (
+                  {processedImage && !getFlakeAnalysis() && (
                     <div className="label-info">
                       <div className="legend-title">Legacy Processing Mode</div>
                       <div className="label-count">
-                        Using original segmentation image (no layer data available)
+                        Using original segmentation image (no flake data available)
                       </div>
                     </div>
                   )}
