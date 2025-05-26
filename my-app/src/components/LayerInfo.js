@@ -2,7 +2,42 @@ import React, { useState } from 'react';
 import { Box, Typography, Paper, Accordion, AccordionSummary, AccordionDetails, Tabs, Tab } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
-const LayerInfo = ({ analysis, expanded, onExpand }) => {
+// 添加RLE解析函数
+const decodeRLE = (rle, shape) => {
+  const [height, width] = shape;
+  const mask = new Array(height * width).fill(0);
+  let pos = 0;
+  
+  for (let i = 0; i < rle.length; i += 2) {
+    const start = rle[i];
+    const length = rle[i + 1];
+    for (let j = 0; j < length; j++) {
+      mask[start + j] = 1;
+    }
+  }
+  
+  // 计算边界框
+  let minX = width, minY = height, maxX = 0, maxY = 0;
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      if (mask[y * width + x] === 1) {
+        minX = Math.min(minX, x);
+        minY = Math.min(minY, y);
+        maxX = Math.max(maxX, x);
+        maxY = Math.max(maxY, y);
+      }
+    }
+  }
+  
+  return {
+    x: minX,
+    y: minY,
+    width: maxX - minX + 1,
+    height: maxY - minY + 1
+  };
+};
+
+const LayerInfo = ({ analysis, expanded, onExpand, onFlakeSelect }) => {
   const [selectedThickness, setSelectedThickness] = useState(null);
   const [selectedFlakeIndex, setSelectedFlakeIndex] = useState(null);
 
@@ -11,6 +46,16 @@ const LayerInfo = ({ analysis, expanded, onExpand }) => {
   const handleThicknessChange = (thickness) => {
     setSelectedThickness(thickness === selectedThickness ? null : thickness);
     setSelectedFlakeIndex(null);
+  };
+
+  const handleFlakeClick = (flake, index) => {
+    setSelectedFlakeIndex(selectedFlakeIndex === index ? null : index);
+    
+    // 如果flake有mask信息，计算边界框并触发回调
+    if (flake.mask && flake.mask.rle && flake.mask.shape) {
+      const bbox = decodeRLE(flake.mask.rle, flake.mask.shape);
+      onFlakeSelect(bbox);
+    }
   };
 
   return (
@@ -65,7 +110,7 @@ const LayerInfo = ({ analysis, expanded, onExpand }) => {
                     key={index}
                     onClick={(e) => {
                       e.stopPropagation();
-                      setSelectedFlakeIndex(selectedFlakeIndex === index ? null : index);
+                      handleFlakeClick(flake, index);
                     }}
                     sx={{
                       p: 1,

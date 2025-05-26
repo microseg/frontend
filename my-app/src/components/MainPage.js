@@ -295,6 +295,8 @@ function MainPage({ onLogout }) {
   const [currentPath, setCurrentPath] = useState(''); // Current folder path
   const [selectedLayer, setSelectedLayer] = useState(null); // Currently selected layer for highlighting
   const [expandedLayers, setExpandedLayers] = useState(new Set());
+  const [showOriginalImage, setShowOriginalImage] = useState(false);
+  const [highlightedImage, setHighlightedImage] = useState(null);
   
   const dropdownRef = useRef(null); // Reference for dropdown menu (used for click outside detection)
   const uploadDropdownRef = useRef(null); // Reference for upload dropdown
@@ -424,8 +426,9 @@ function MainPage({ onLogout }) {
     setSelectedImage('');
     setSelectedImageKey(imageKey);
     setProcessedImage(null);
-    setSelectedLayer(null); // Reset selected layer when changing images
-    setExpandedLayers(new Set()); // Reset expanded layers state when changing images
+    setSelectedLayer(null);
+    setExpandedLayers(new Set());
+    setShowOriginalImage(false);
     setLoading(true);
     setError('');
 
@@ -451,7 +454,16 @@ function MainPage({ onLogout }) {
         throw new Error('No URL in response');
       }
 
-      setSelectedImage(bodyData.url);
+      // 新增：下载图片并存到localStorage
+      const imgRes = await fetch(bodyData.url);
+      const imgBlob = await imgRes.blob();
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        // 存base64到localStorage
+        localStorage.setItem(`img_${imageKey}`, reader.result);
+        setSelectedImage(reader.result); // 直接用base64
+      };
+      reader.readAsDataURL(imgBlob);
     } catch (error) {
       console.error('Failed to load image:', error);
       setError('Failed to load image: ' + error.message);
@@ -469,9 +481,14 @@ function MainPage({ onLogout }) {
 
     setLoading(true);
     setProcessedImage(null);
-    setSelectedLayer(null); // Reset selected layer when processing a new image
-    setExpandedLayers(new Set()); // Reset expanded layers state
+    setSelectedLayer(null);
+    setExpandedLayers(new Set());
+    setShowOriginalImage(false);
+    setHighlightedImage(null);
     setError('');
+
+    // 记录当前图片key
+    const currentKey = selectedImageKey;
 
     try {
       const response = await fetch(API_CONFIG.endpoints.processImage, {
@@ -481,7 +498,7 @@ function MainPage({ onLogout }) {
         },
         body: JSON.stringify({
           bucket_name: 'test-matsight',
-          image_key: selectedImageKey,
+          image_key: currentKey,
           material: 'Graphene'
         })
       });
@@ -492,17 +509,10 @@ function MainPage({ onLogout }) {
       }
 
       const result = await response.json();
-      console.log('API response:', result);
-      
       if (result.statusCode === 200) {
         const bodyObj = result.body;
-        console.log('Response body:', bodyObj);
-        
-        // Get the processed image from S3
         if (bodyObj.file_locations && bodyObj.file_locations.output_image) {
           const imageKey = bodyObj.file_locations.output_image.replace('s3://test-matsight/', '');
-          
-          // Get the processed image URL
           const imageResponse = await fetch(API_CONFIG.endpoints.getImageUrl, {
             method: 'POST',
             headers: {
@@ -517,14 +527,17 @@ function MainPage({ onLogout }) {
           const imageData = await imageResponse.json();
           if (imageData.statusCode === 200) {
             const imageUrl = JSON.parse(imageData.body).url;
-            setProcessedImage({
-              image: imageUrl,
-              isS3Url: true,
-              flakes: bodyObj.flakes,
-              flakes_detected: bodyObj.flakes_detected,
-              material: bodyObj.material,
-              detection_parameters: bodyObj.detection_parameters
-            });
+            // 只在key没变时才set
+            if (selectedImageKey === currentKey) {
+              setProcessedImage({
+                image: imageUrl,
+                isS3Url: true,
+                flakes: bodyObj.flakes,
+                flakes_detected: bodyObj.flakes_detected,
+                material: bodyObj.material,
+                detection_parameters: bodyObj.detection_parameters
+              });
+            }
           } else {
             throw new Error('Failed to get processed image URL');
           }
@@ -535,10 +548,13 @@ function MainPage({ onLogout }) {
         throw new Error('Processing failed: ' + (result.body?.error || 'Unknown error'));
       }
     } catch (error) {
-      console.error('Image processing failed:', error);
-      setError('Image processing failed: ' + error.message);
+      if (selectedImageKey === currentKey) {
+        setError('Image processing failed: ' + error.message);
+      }
     } finally {
-      setLoading(false);
+      if (selectedImageKey === currentKey) {
+        setLoading(false);
+      }
     }
   };
 
@@ -548,55 +564,30 @@ function MainPage({ onLogout }) {
    * @returns {string|null} - Data URL of the processed image
    */
   const drawProcessedImage = () => {
-    if (!processedImage || !processedImage.image) return null;
-
+    if (!processedImage) return null;
+    if (showOriginalImage) {
+      return selectedImage;
+    }
+    if (!processedImage.label) return null;
     const canvas = document.createElement('canvas');
-    const width = processedImage.image[0].length;
-    const height = processedImage.image.length;
-    
+    const ctx = canvas.getContext('2d');
+    const [height, width] = processedImage.label.shape;
     canvas.width = width;
     canvas.height = height;
-    
-    const ctx = canvas.getContext('2d');
     const imageData = ctx.createImageData(width, height);
-    
-    // Draw each pixel from the processed data
-    if (selectedLayer === null || !processedImage.label) {
-      // No layer selected or no label data - show the original processed image
-      for (let y = 0; y < height; y++) {
-        for (let x = 0; x < width; x++) {
-          const pixel = processedImage.image[y][x];
-          const index = (y * width + x) * 4;
-          imageData.data[index] = pixel[0];     // R
-          imageData.data[index + 1] = pixel[1]; // G
-          imageData.data[index + 2] = pixel[2]; // B
-          imageData.data[index + 3] = 255;      // A
-        }
-      }
-    } else {
-      // A layer is selected - only show that layer, make other areas black
-      for (let y = 0; y < height; y++) {
-        for (let x = 0; x < width; x++) {
-          const index = (y * width + x) * 4;
-          const labelValue = processedImage.label[y][x];
-          
-          if (labelValue === selectedLayer) {
-            // This pixel belongs to the selected layer - show it
-            const pixel = processedImage.image[y][x];
-            imageData.data[index] = pixel[0];     // R
-            imageData.data[index + 1] = pixel[1]; // G
-            imageData.data[index + 2] = pixel[2]; // B
-          } else {
-            // This pixel does not belong to the selected layer - make it black with some transparency
-            imageData.data[index] = 0;      // R
-            imageData.data[index + 1] = 0;  // G
-            imageData.data[index + 2] = 0;  // B
-          }
-          imageData.data[index + 3] = 255;  // A
-        }
+    const data = imageData.data;
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        const label = processedImage.label[y][x];
+        const color = getFlakeAnalysis().colorMap[label] || 'rgb(0, 0, 0)';
+        const [r, g, b] = color.match(/\d+/g).map(Number);
+        const i = (y * width + x) * 4;
+        data[i] = r;
+        data[i + 1] = g;
+        data[i + 2] = b;
+        data[i + 3] = 255;
       }
     }
-    
     ctx.putImageData(imageData, 0, 0);
     return canvas.toDataURL();
   };
@@ -1301,6 +1292,110 @@ function MainPage({ onLogout }) {
     });
   };
 
+  const handleFlakeSelect = (flake) => {
+    const base64Img = localStorage.getItem(`img_${selectedImageKey}`);
+    if (!base64Img) {
+      // 未找到本地缓存的原图
+      return;
+    }
+    const img = new window.Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      if (flake.mask && flake.mask.rle && flake.mask.shape) {
+        // 解析mask
+        const [height, width] = flake.mask.shape;
+        const mask = new Array(height * width).fill(0);
+        const rle = flake.mask.rle;
+        for (let i = 0; i < rle.length; i += 2) {
+          const start = rle[i];
+          const length = rle[i + 1];
+          for (let j = 0; j < length; j++) {
+            mask[start + j] = 1;
+          }
+        }
+        // Moore-Neighbor tracing 轮廓追踪
+        function traceContour(mask, width, height) {
+          // 寻找第一个边缘点
+          let start = null;
+          for (let y = 0; y < height && !start; y++) {
+            for (let x = 0; x < width && !start; x++) {
+              if (mask[y * width + x] === 1) {
+                // 是边缘点
+                let isEdge = false;
+                for (let dy = -1; dy <= 1 && !isEdge; dy++) {
+                  for (let dx = -1; dx <= 1 && !isEdge; dx++) {
+                    if (dx === 0 && dy === 0) continue;
+                    const nx = x + dx;
+                    const ny = y + dy;
+                    if (nx < 0 || nx >= width || ny < 0 || ny >= height || mask[ny * width + nx] === 0) {
+                      isEdge = true;
+                    }
+                  }
+                }
+                if (isEdge) {
+                  start = [x, y];
+                }
+              }
+            }
+          }
+          if (!start) return [];
+          const dirs = [
+            [1, 0], [1, 1], [0, 1], [-1, 1],
+            [-1, 0], [-1, -1], [0, -1], [1, -1]
+          ];
+          let contour = [start];
+          let curr = start.slice();
+          let prevDir = 6; // 上一个方向，初始向左
+          let loop = 0;
+          do {
+            let found = false;
+            for (let i = 0; i < 8; i++) {
+              const dir = (prevDir + i) % 8;
+              const [dx, dy] = dirs[dir];
+              const nx = curr[0] + dx;
+              const ny = curr[1] + dy;
+              if (nx >= 0 && nx < width && ny >= 0 && ny < height && mask[ny * width + nx] === 1) {
+                // 是边缘点
+                curr = [nx, ny];
+                contour.push(curr);
+                prevDir = (dir + 6) % 8; // 下次从当前方向的前一个方向开始
+                found = true;
+                break;
+              }
+            }
+            if (!found) break;
+            loop++;
+            if (curr[0] === start[0] && curr[1] === start[1] && loop > 1) break;
+            if (loop > 10000) break; // 防止死循环
+          } while (true);
+          return contour;
+        }
+        const contour = traceContour(mask, width, height);
+        if (contour.length > 1) {
+          ctx.save();
+          ctx.strokeStyle = '#FF0000';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(contour[0][0], contour[0][1]);
+          for (let i = 1; i < contour.length; i++) {
+            ctx.lineTo(contour[i][0], contour[i][1]);
+          }
+          ctx.closePath();
+          ctx.stroke();
+          ctx.restore();
+        }
+      }
+      const base64 = canvas.toDataURL();
+      setHighlightedImage(base64);
+    };
+    img.src = base64Img;
+    setShowOriginalImage(false);
+  };
+
   // Render the main interface
   return (
     <div className="main-page">
@@ -1537,7 +1632,7 @@ function MainPage({ onLogout }) {
                     <div className="image-preview">
                       {processedImage ? (
                         <img 
-                          src={processedImage.isS3Url ? processedImage.image : drawProcessedImage()} 
+                          src={highlightedImage ? highlightedImage : (processedImage.isS3Url ? processedImage.image : drawProcessedImage())} 
                           alt="Processed result" 
                         />
                       ) : (
@@ -1633,7 +1728,11 @@ function MainPage({ onLogout }) {
                               {isExpanded && (
                                 <div className="flake-list">
                                   {flakes.map((flake, index) => (
-                                    <div key={index} className="flake-item">
+                                    <div
+                                      key={index}
+                                      className="flake-item"
+                                      onClick={() => handleFlakeSelect(flake)}
+                                    >
                                       <div className="flake-name">Flake {index + 1}</div>
                                       <div className="flake-details">
                                         <div>
