@@ -297,6 +297,7 @@ function MainPage({ onLogout }) {
   const [expandedLayers, setExpandedLayers] = useState(new Set());
   const [showOriginalImage, setShowOriginalImage] = useState(false);
   const [highlightedImage, setHighlightedImage] = useState(null);
+  const [selectedMaterial, setSelectedMaterial] = useState('Graphene');
   
   const dropdownRef = useRef(null); // Reference for dropdown menu (used for click outside detection)
   const uploadDropdownRef = useRef(null); // Reference for upload dropdown
@@ -474,7 +475,7 @@ function MainPage({ onLogout }) {
 
   /**
    * Processes the selected image using the analysis API
-   * Sends the image for material analysis (Graphene)
+   * Sends the image for material analysis
    */
   const processImage = async () => {
     if (!selectedImageKey) return;
@@ -499,7 +500,7 @@ function MainPage({ onLogout }) {
         body: JSON.stringify({
           bucket_name: 'test-matsight',
           image_key: currentKey,
-          material: 'Graphene'
+          material: selectedMaterial
         })
       });
 
@@ -1204,7 +1205,7 @@ function MainPage({ onLogout }) {
     if (!processedImage) return;
     
     const link = document.createElement('a');
-    link.download = 'graphene_analysis.png';
+    link.download = `${selectedMaterial.toLowerCase()}_analysis.png`;
     link.href = drawProcessedImage();
     document.body.appendChild(link);
     link.click();
@@ -1241,7 +1242,7 @@ function MainPage({ onLogout }) {
     
     // Create analysis result data
     const analysisData = {
-      material: 'Graphene',
+      material: selectedMaterial,
       imageSize: {
         width: labelData[0].length,
         height: labelData.length,
@@ -1269,7 +1270,7 @@ function MainPage({ onLogout }) {
     const url = URL.createObjectURL(dataBlob);
     
     const link = document.createElement('a');
-    link.download = 'graphene_analysis_data.json';
+    link.download = `${selectedMaterial}_analysis_data.json`;
     link.href = url;
     document.body.appendChild(link);
     link.click();
@@ -1401,7 +1402,19 @@ function MainPage({ onLogout }) {
     <div className="main-page">
       {/* Header section with user info and menu */}
       <header className="header">
-        <h1>MatSight</h1>
+        <div className="header-left">
+          <h1>Matsight</h1>
+          <div className="material-selector">
+            <select 
+              value={selectedMaterial} 
+              onChange={(e) => setSelectedMaterial(e.target.value)}
+              className="material-select"
+            >
+              <option value="Graphene">Graphene</option>
+              <option value="WSe2">WSe2</option>
+            </select>
+          </div>
+        </div>
         <div className="user-info">
           {userData && <span>Welcome, {userData.username}</span>}
           <div className="dropdown-container" ref={dropdownRef}>
@@ -1687,9 +1700,9 @@ function MainPage({ onLogout }) {
                 <div className="info-column">
                   {getFlakeAnalysis() && (
                     <div className="label-info">
-                      <div className="legend-title">Graphene Layer Analysis</div>
+                      <div className="legend-title">{selectedMaterial} Layer Analysis</div>
                       <div className="layer-count">
-                        Detected {getFlakeAnalysis().totalFlakes} graphene flakes
+                        Detected {getFlakeAnalysis().totalFlakes} {selectedMaterial.toLowerCase()} flakes
                       </div>
                       
                       <div className="user-guide">
